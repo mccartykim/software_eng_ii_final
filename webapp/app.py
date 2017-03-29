@@ -2,6 +2,7 @@
 """
 Rough webapp for final
 This script is basic and monolithic
+I will probably split it later
 """
 import os
 import sqlite3
@@ -47,3 +48,28 @@ def initdb_command():
     init_db()
     print('Initialized the database.')
 
+
+
+#FIXME
+@app.route('/')
+def homepage():
+    return "Hello world. NOW FIXME"
+
+#display login prompt
+@app.route('/login')
+def login():
+    if request.method == 'POST':
+        #FIXME: handle user submission
+        #FIXME: reject invalid input
+        #FIXME 3 factor auth
+        session['logged_in'] = True;
+        flash("You were logged in")
+        return redirect(url_for("homepage"))
+    #if this is not a post, return the login page
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash("You were logged out")
+    return redirect(url_for('homepage'))
