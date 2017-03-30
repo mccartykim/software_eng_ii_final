@@ -8,3 +8,4 @@ create table passwords (
        security_question not null
        security_answer not null
 );
+-- TODO To consider: Is an administrator a type of user, or a different entity, in this model?
