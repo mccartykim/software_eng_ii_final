@@ -2,10 +2,10 @@
 <!-- I know if I hardcode the app name I'll typo it
      :-(
    -->
-<title>{{ appName }}</title>
+<title>{{ config.APPNAME }}</title>
 <link rel="stylesheet" type=text/css href="{{url_for('static', filename='style.css')}}">
 <div class=page>
-    <h1>{{AppName}}</h1>
+    <h1>{{ config.APPNAME }}</h1>
     <div class=accountbar>
         <!-- ~Hey classmates~
              This bit is a conditional statement

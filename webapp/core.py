@@ -14,16 +14,16 @@ app.config.from_object(__name__) #Use config variables in this file
 
 #the g object serves as a place to store global data between requests and sessions
 
-g.APPNAME = "Monster Lockdown Security System"
-g.ORGNAME = "Cybersleuth Security"
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, "data.db"),
     SECRET_KEY="development_key",
     USERNAME="ADMIN",
+    APPNAME = "Monster Lockdown Security System",
+    ORGNAME = "Cybersleuth Security",
     PASSWORD="default"))
 
-app.config.from_envvar('CYBERSLUTH_SETTINGS', silent=True)
+app.config.from_envvar('CYBERSLEUTH_SETTINGS', silent=True)
 
 """MODEL"""
 
@@ -72,16 +72,24 @@ def homepage():
 
 
 #display login prompt
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     error = dict(foo='none')
     if request.method == 'POST':
+        valid_user = True
         #FIXME: handle user submission
         #FIXME: reject invalid input
         #FIXME 3 factor auth
-        session['logged_in'] = True;
-        flash("You were logged in")
-        return redirect(url_for("homepage"))
+        if valid_user:
+            session['logged_in'] = True;
+            session['username'] = request.form['username']
+            flash("You were logged in")
+            return redirect(url_for("homepage"))
+        else:
+            session['logged_in'] = False
+            #FIXME include other auth failures
+            flash("Failure")
+            return redirect(url_for("login"))
     #if this is not a post, return the login page
     return render_template('login.html', error=error)
 
@@ -93,7 +101,11 @@ def logout():
 
 @app.route('/register')
 def register():
-    return "Sign up for our invite list, my pal!"
+    if not session.get('logged_in'):
+        flash("Please log out to register a new account.")
+        return redirect(url_for('homepage'))
+    else:
+        return render_template('register.html')
 
 #TODO 404 page
 #TODO TOTP (time based onetime pass)

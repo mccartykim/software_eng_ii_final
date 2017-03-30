@@ -5,7 +5,7 @@
 <h2>Hello {{ session.username }}</h2>
 {% else %}
 <p>
-    Have you considered <a href="{{ url_for('register') }}">registering</a> for our product?
+    If you have an account, please <a href="{{ url_for('login') }}">log in</a>.  Otherwise, have you considered <a href="{{ url_for('register') }}">registering</a> for our product?
 </p>
 {% endif %}
 </div><!-- .greeting -->
