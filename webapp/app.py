@@ -53,11 +53,16 @@ def initdb_command():
 #FIXME
 @app.route('/')
 def homepage():
-    return "Hello world. NOW FIXME"
+    try:
+        return render_template('home.html')
+    except Exception as e:
+        print(e)
+        return "Hello world. NOW FIXME"
 
 #display login prompt
 @app.route('/login')
 def login():
+    error = dict(foo='none')
     if request.method == 'POST':
         #FIXME: handle user submission
         #FIXME: reject invalid input
@@ -73,3 +78,15 @@ def logout():
     session.pop('logged_in', None)
     flash("You were logged out")
     return redirect(url_for('homepage'))
+
+@app.route('/register')
+def register():
+    return "Sign up for our invite list, my pal!"
+
+#TODO 404 page
+
+#TODO TOTP (time based onetime pass)
+
+#Python idiom that more or less means, if we're running this script manually, run this code.
+if __name__ == "__main__":
+    app.run()
