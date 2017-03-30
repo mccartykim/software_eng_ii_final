@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Spacemacs Cache files:
+.#*
+
 # C extensions
 *.so
 
