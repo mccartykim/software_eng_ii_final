@@ -9,6 +9,12 @@ import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort,\
     render_template, flash
 
+#The following two libraries are part of the standard Python library, and contain widely accepted hashing functions
+#I will use pbkdf2, a hashing algorithm considered "good" for passwords, and definitely better than just SHA-1.
+import hashlib
+import binascii
+HASH_ROUNDS = 100000 # constant for how many rounds of SHA-256 to run on password hash
+
 app = Flask(__name__) # start a Flask webapp from this instance
 app.config.from_object(__name__) #Use config variables in this file
 
@@ -112,7 +118,57 @@ def register():
 
 """CONTROLLER"""
 #TODO functions to authenticate user
+#FIXME stub
+def verify_password(user, plain_passwd):
+    db = get_db()
+    cur = db.execute("select passwd, salt FROM accounts WHERE 'user'=?", user)
+    try:
+        hashed_passwd, salt = cur.fetchone()
+    #FIXME: This is very lazy exception handling
+    except:
+        print("DB ERROR of some sort, returning false")
+        return False
 
+    this_hash = hash_password(plain_passwd, salt)
+    #NOTE: should I convert these to hexadeximal? Store the bytes?
+    if this_hash == hashed_passwd:
+        return True
+    else:
+        return False
+
+#FIXME stub
+def verify_TOMP():
+    return True
+
+#FIXME stub
+def verify_image():
+    return True
+
+#TODO FIXME
+def register_accout(username, passwd, image, security_question, security_answer, is_admin=False):
+    salt = create_salt()
+    #FIXME validate username
+    #FIXME validate passwd
+    #FIXME validate image
+    totp = 0 #FIXME placeholder value until totp is implemented.
+    hashed_passwd = hash_password()
+
+    db = get_db()
+    db.execute("insert into accounts ('user', passwd, salt," + \
+               "totp_token, image, security_question, security_answer, isAdministrator) " + \
+               "values (?, ?, ?, ?, ?, ?, ?)", \
+               (username, hashed_passwd, salt, totp, image, security_question, security_answer, is_admin)
+    )
+    db.commit()
+    #TODO error handling
+
+def hash_password(passwd, salt):
+    pass_hash = hashlib.pbkdf2_hmac('sha256', passwd, salt, HASH_ROUNDS)
+    return binascii.hexlify(pass_hash)
+
+#Gets 32 bytes of random data
+def create_salt():
+    return os.urandom(32)
 
 #Python idiom that more or less means, if we're running this script manually, run this code.
 if __name__ == "__main__":
