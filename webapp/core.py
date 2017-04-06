@@ -35,7 +35,10 @@ app.config.from_envvar('CYBERSLEUTH_SETTINGS', silent=True)
 
 def connect_db():
     rv = sqlite3.connect(app.config['DATABASE'])
+    #FIXME line below will erase all data on startup, should be removed
+    #But great for testing!
     rv.row_factory = sqlite3.Row
+    #init_db(rv) #uncomment to init db
     return rv
 
 def get_db():
@@ -49,8 +52,7 @@ def close_db(error):
         g.sqlite_db.close()
 
 
-def init_db():
-    db = get_db()
+def init_db(db):
     with app.open_resource('db_init/schema.sql', mode='r') as f:
         db.cursor().executescript(f.read())
     db.commit();
@@ -61,20 +63,19 @@ def initdb_command():
     init_db()
     print('Initialized the database.')
 
-#TODO function to get user fields for controller
-#TODO function to create and save a new user
-#TODO function to enter a user's data
+def get_user(username):
+    db = get_db()
+    #print(username)
+    cur = db.execute("select * FROM accounts WHERE user=?", (username,))
+    result = cur.fetchone()
+    return result
+
 
 """VIEWS"""
-
 #FIXME
 @app.route('/')
 def homepage():
-    try:
-        return render_template('home.html')
-    except Exception as e:
-        print(e)
-        return "Hello world. NOW FIXME"
+    return render_template('home.html')
 
 
 #display login prompt
@@ -82,19 +83,24 @@ def homepage():
 def login():
     error = dict(foo='none')
     if request.method == 'POST':
-        valid_user = True
         #FIXME: handle user submission
-        #FIXME: reject invalid input
-        #FIXME 3 factor auth
+        this_user = get_user(request.form["username"])
+        if this_user:
+            #FIXME check password
+            valid_user = verify_password(this_user['user'], request.form['password'])
+            #FIXME 3 factor auth
+        else:
+            valid_user = False
+
         if valid_user:
             session['logged_in'] = True;
             session['username'] = request.form['username']
             flash("You were logged in")
             return redirect(url_for("homepage"))
         else:
-            session['logged_in'] = False
+            session.pop('logged_in', None)
             #FIXME include other auth failures
-            flash("Failure")
+            flash("Invalid Username or Password")
             return redirect(url_for("login"))
     #if this is not a post, return the login page
     return render_template('login.html', error=error)
@@ -105,13 +111,22 @@ def logout():
     flash("You were logged out")
     return redirect(url_for('homepage'))
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if not session.get('logged_in'):
+    if session.get('logged_in'):
         flash("Please log out to register a new account.")
         return redirect(url_for('homepage'))
-    else:
-        return render_template('register.html')
+    elif request.method == 'POST':
+        f = request.form
+        reg_status = register_account(f['username'], f['passwd'], f['sec-image'], f['totp'], f['question'], f['answer'], 0)
+        if reg_status['success']:
+            flash("Account created successfully.  Please log in.")
+            return redirect(url_for("login"))
+        else:
+            flash(reg_status['message'])
+        #log new user to db
+    #default return and GET response
+    return render_template('register.html')
 
 #TODO 404 page
 #TODO TOTP (time based onetime pass)
@@ -121,7 +136,7 @@ def register():
 #FIXME stub
 def verify_password(user, plain_passwd):
     db = get_db()
-    cur = db.execute("select passwd, salt FROM accounts WHERE 'user'=?", user)
+    cur = db.execute("select passwd, salt FROM accounts WHERE user=?", (user,))
     try:
         hashed_passwd, salt = cur.fetchone()
     #FIXME: This is very lazy exception handling
@@ -129,7 +144,9 @@ def verify_password(user, plain_passwd):
         print("DB ERROR of some sort, returning false")
         return False
 
-    this_hash = hash_password(plain_passwd, salt)
+    bin_salt = binascii.unhexlify(salt)
+    this_hash = hash_password(plain_passwd, bin_salt)
+    print("Good hash: {}".format(hashed_passwd))
     #NOTE: should I convert these to hexadeximal? Store the bytes?
     if this_hash == hashed_passwd:
         return True
@@ -145,30 +162,43 @@ def verify_image():
     return True
 
 #TODO FIXME
-def register_accout(username, passwd, image, security_question, security_answer, is_admin=False):
+#NOTE consider hash+salt for answer
+def register_account(username, passwd, image, totp, security_question, security_answer, is_admin=False):
+    status = {'success': False, 'message': "Failure: Cause unknown"}
     salt = create_salt()
     #FIXME validate username
     #FIXME validate passwd
     #FIXME validate image
     totp = 0 #FIXME placeholder value until totp is implemented.
-    hashed_passwd = hash_password()
+    hashed_passwd = hash_password(passwd, binascii.unhexlify(salt))
 
     db = get_db()
-    db.execute("insert into accounts ('user', passwd, salt," + \
-               "totp_token, image, security_question, security_answer, isAdministrator) " + \
-               "values (?, ?, ?, ?, ?, ?, ?)", \
-               (username, hashed_passwd, salt, totp, image, security_question, security_answer, is_admin)
+    db.execute("insert into accounts " + \
+               "values (?, ?, ?, ?, ?, ?, ?, ?)", \
+               (username, is_admin, hashed_passwd, salt, totp, image, security_question, security_answer)
     )
     db.commit()
-    #TODO error handling
+    status['success'] = True
+    status['message'] = "User registered"
+    #TODO remove this in final version
+    for row in db.execute("select * from accounts"):
+        for key_ in row.keys():
+            print ("{}: {}".format(key_, row[key_]))
+    return status
 
 def hash_password(passwd, salt):
-    pass_hash = hashlib.pbkdf2_hmac('sha256', passwd, salt, HASH_ROUNDS)
-    return binascii.hexlify(pass_hash)
+    try:
+        pass_hash = hashlib.pbkdf2_hmac('sha256', passwd.encode('utf-8'), salt, HASH_ROUNDS)
+    except AttributeError:
+        pass_hash = hashlib.pbkdf2_hmac('sha256', passwd, salt, HASH_ROUNDS)
+    result = binascii.hexlify(pass_hash)
+    print("Password hash: {}".format(result))
+    return result
 
 #Gets 32 bytes of random data
 def create_salt():
-    return os.urandom(32)
+    binary_salt = os.urandom(32)
+    return binascii.hexlify(binary_salt)
 
 #Python idiom that more or less means, if we're running this script manually, run this code.
 if __name__ == "__main__":
