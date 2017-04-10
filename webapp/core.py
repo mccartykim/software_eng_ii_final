@@ -13,6 +13,10 @@ from flask import Flask, request, session, g, redirect, url_for, abort,\
 #I will use pbkdf2, a hashing algorithm considered "good" for passwords, and definitely better than just SHA-1.
 import hashlib
 import binascii
+import hmac
+
+import time #Used for TOTP algorithm
+
 HASH_ROUNDS = 100000 # constant for how many rounds of SHA-256 to run on password hash
 
 app = Flask(__name__) # start a Flask webapp from this instance
@@ -35,9 +39,9 @@ app.config.from_envvar('CYBERSLEUTH_SETTINGS', silent=True)
 
 def connect_db():
     rv = sqlite3.connect(app.config['DATABASE'])
+    rv.row_factory = sqlite3.Row
     #FIXME line below will erase all data on startup, should be removed
     #But great for testing!
-    rv.row_factory = sqlite3.Row
     #init_db(rv) #uncomment to init db
     return rv
 
@@ -83,12 +87,13 @@ def homepage():
 def login():
     error = dict(foo='none')
     if request.method == 'POST':
-        #FIXME: handle user submission
         this_user = get_user(request.form["username"])
         if this_user:
-            #FIXME check password
+            #check_password
             valid_user = verify_password(this_user['user'], request.form['password'])
-            #FIXME 3 factor auth
+            if valid_user:
+                #TODO verify image
+                pass
         else:
             valid_user = False
 
@@ -153,13 +158,31 @@ def verify_password(user, plain_passwd):
     else:
         return False
 
-#FIXME stub
-def verify_TOMP():
-    return True
+#TOTP algorithm that takes a private key, a code from the user, a starting time after the unix epoch, and a time interval.  Here, we default to 0 (0 seconds after Jan 1st, 1970 in time library) and 30 seconds (a reasonable time for the user to enter a code)
+def verify_TOTP(key, code, epoch=0, timeInterval=30):
+    unix_time = time.gmtime()
+    steps = (unix_time - epoch) // timeInterval;
+    valid_codes = [generate_HOTP(key, steps + x) for x in range(-1, 2)] # see what codes are okay for one step ago, now, and one step in the future
+    # These three codes account for clock skew and slow user input.
+    for valid_code in valid_codes:
+        if code == valid_code:
+            return True
+    return False
 
-#FIXME stub
-def verify_image():
-    return True
+
+# Google Authenticator has a fairly simple algorithm if you have a built-in SHA1 algorithm.  Essentially, hash, then truncate to six digits.
+# resources:
+#https://en.wikipedia.org/wiki/Google_Authenticator
+#http://stackoverflow.com/a/23221582
+def generate_HOTP(key, steps):
+    hash = hmac.new(key, steps, hashlib.sha1).digest()
+    #following two lines are from stackoverflow answer
+    offset = int(hash[-1, 16])
+    binary = int(hash[(offset * 2):((offset * 2) + 8)], 16) & 0x7fffffff
+    return str(binary)[-6:] #take last six digits
+
+def verify_image(image, correct_image):
+    return image == correct_image
 
 #TODO FIXME
 #NOTE consider hash+salt for answer
