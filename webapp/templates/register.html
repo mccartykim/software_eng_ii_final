@@ -19,22 +19,22 @@
             <dd><ul>
                 <!-- FIXME macro of some sort to handle custom images -->
 
-                <li><input type="radio" value="apple" name="sec-image"></li>
-                <li><input type="radio" value="bird" name="sec-image"></li>
-                <li><input type="radio" value="building" name="sec-image"></li>
-                <li><input type="radio" value="car" name="sec-image"></li>
-                <li><input type="radio" value="guitar" name="sec-image"></li>
-                <li><input type="radio" value="money" name="sec-image"></li>
-                <li><input type="radio" value="mug" name="sec-image"></li>
-                <li><input type="radio" value="robot" name="sec-image"></li>
-                <li><input type="radio" value="stop-sign" name="sec-image"></li>
-                <li><input type="radio" value="tree" name="sec-image"></li>
+                <li><input type="radio" value="apple" name="sec-image"><img src="{{url_for('static', filename='apple.png')}}"></li>
+                <li><input type="radio" value="bird" name="sec-image"><img src="{{url_for('static', filename='bird.png')}}"></li>
+                <li><input type="radio" value="building" name="sec-image"><img src="{{url_for('static', filename='building.png')}}"></li>
+                <li><input type="radio" value="car" name="sec-image"><img src="{{url_for('static', filename='car.png')}}"></li>
+                <li><input type="radio" value="guitar" name="sec-image"><img src="{{url_for('static', filename='guitar.png')}}"></li>
+                <li><input type="radio" value="money" name="sec-image"><img src="{{url_for('static', filename='money.png')}}"></li>
+                <li><input type="radio" value="mug" name="sec-image"><img src="{{url_for('static', filename='mug.png')}}"></li>
+                <li><input type="radio" value="robot" name="sec-image"><img src="{{url_for('static', filename='robot.png')}}"></li>
+                <li><input type="radio" value="stop-sign" name="sec-image"><img src="{{url_for('static', filename='stop-sign.png')}}"></li>
+                <li><input type="radio" value="tree" name="sec-image"><img src="{{url_for('static', filename='tree.png')}}"></li>
             </ul></dd>
             <dt>Security question</dt>
             <dd><input type="text" name="question"></dd>
             <dt>Security answer</dt>
             <dd><input type="text" name="answer"></dd>
-            <dd><input type="submit" value="Log In" ></dd>
+            <dd><input type="submit" value="Submit" ></dd>
         </dl>
     </form>
  </div><!-- .register -->

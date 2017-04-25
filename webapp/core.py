@@ -18,7 +18,7 @@ import hashlib
 import binascii
 import base64
 import hmac
-
+import random
 import time #Used for TOTP algorithm
 
 HASH_ROUNDS = 100000 # constant for how many rounds of SHA-256 to run on password hash
@@ -85,9 +85,10 @@ def get_image_url(image_title):
     result = cur.fetchone()
     return url_for("static", filename=result['file'])
 
-def get_random_images():
+def get_random_images(exclude):
     db = get_db()
-    cur = db.execute("select * FROM images ORDER BY RANDOM() LIMIT 8")
+    print(exclude)
+    cur = db.execute("select * FROM images WHERE title NOT LIKE ? ORDER BY RANDOM() LIMIT 8", (exclude,))
     result = []
     for row in cur.fetchall():
         result.append({'title': row['title'], 'file': url_for("static", filename=row['file'])})
@@ -161,7 +162,9 @@ def image_select():
         if session.get('user'):
             user = get_user(session['user'])
             sec_images = [{'title': user['image'], 'file': get_image_url(user['image'])}]
-            sec_images.extend(get_random_images())
+            sec_images.extend(get_random_images(user['image']))
+            ran = random.randint(0, 8)
+            (sec_images[0], sec_images[ran]) = (sec_images[ran], sec_images[0])
             return render_template("pictures.html", sec_images=sec_images)
         else:
             revoke(session)

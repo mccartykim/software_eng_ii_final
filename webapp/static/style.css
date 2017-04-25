@@ -1,0 +1,35 @@
+body {
+    font-family: "sans-serif";
+}
+.page {
+    background-color: rgb(200, 200, 255);
+    border-radius: 5px;
+    margin: 1em;
+    padding: 1em;
+}
+
+.selectimage {
+    
+}
+
+.selectimage div.radio_option{
+    display: inline-block;
+    width: 27%;
+    border: 0;
+    padding:1%;
+    margin: 2%
+}
+.selectimage div.radio_option img{
+    width: 100px;
+    padding:1em;
+    border-style: solid;
+}
+
+.register img{
+    width: 100px;
+    border-style: solid;
+}
+
+.register dd li {
+    display: inline-block;
+}

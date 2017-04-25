@@ -3,8 +3,10 @@
 <div class=selectimage>
     <form action="{{ url_for('image_select') }}" method="post">
         {% for image in sec_images %}
-        <input type="radio" value="{{image.title|safe}}" name="sec-image">
-        <img src="{{image.file|safe}}" >
+        <div class="radio_option" >
+        <input type="radio" value="{{image.title|safe}}" id="{{image.title}}" name="sec-image">
+        <label for="{{image.title}}"><img src="{{image.file|safe}}"></label>
+        </div>
         {% endfor %}
         <input type="submit" value="Confirm Image" >
     </form>
