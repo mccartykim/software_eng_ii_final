@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class=totp>
+    <form action="{{ url_for('totp_entry') }}" method="post">
+        <dl><dt>Enter authenticator code from Google Authenticator or Authy app</dt><dd><input type="text" name="code"></dd></dl>
+        <input type="submit" value="Submit" >
+    </form>
+ </div><!-- .selectimage -->
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class=selectimage>
+    <form action="{{ url_for('image_select') }}" method="post">
+        {% for image in sec_images %}
+        <input type="radio" value="{{image.title|safe}}" name="sec-image">
+        <img src="{{image.file|safe}}" >
+        {% endfor %}
+        <input type="submit" value="Confirm Image" >
+    </form>
+ </div><!-- .selectimage -->
+{% endblock %}

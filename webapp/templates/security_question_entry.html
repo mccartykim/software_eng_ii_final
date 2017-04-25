@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class=securty_question_entry>
+    <form action="{{ url_for('security_question_entry') }}" method="post">
+        <span class="security_question">{{ security_question }}</span>
+        <input type="text" name="security_answer">
+        <input type="submit" value="Submit" >
+    </form>
+ </div><!-- .selectimage -->
+{% endblock %}
