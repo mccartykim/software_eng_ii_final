@@ -5,7 +5,7 @@
 <title>{{ config.APPNAME }}</title>
 <link rel="stylesheet" type=text/css href="{{url_for('static', filename='style.css')}}">
 <div class=page>
-    <h1>{{ config.APPNAME }}</h1>
+    <a href="{{url_for('homepage')}}"><h1>{{ config.APPNAME }}</h1></a>
     <div class=accountbar>
         <!-- ~Hey classmates~
              This bit is a conditional statement
@@ -16,6 +16,7 @@
         <a href="{{url_for('login')}}">Log In</a>
         <a href="{{url_for('register')}}">Register</a>
         {% else %}
+        <a href="{{url_for('user_info')}}">User Info</a>
         <a href="{{url_for('logout')}}">Log Out </a>
         {% endif %}
     </div><!-- .accountbar -->

@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class=info>
+    <ul>
+        <li>Username: {{user.user}}</li>
+        <li>Email: {{user.email}}</li>
+        <li>Address: {{user.home_address}}</li>
+        <li>Social Security Number: ***-**-{{user.social_security[-4:]}}</li>
+    </ul>
+ </div><!-- .info -->
+{% endblock %}

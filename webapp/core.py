@@ -4,10 +4,7 @@ Rough webapp for final
 This script is basic and monolithic
 I will probably split it later
 """
-#FIXME: add field for user first name and last name
 #Fixme: add email field and verification link
-#Fixme: Add cell phone number
-#FIXME: add Home address and social security number
 #FIXME: Forgot password link
 #FIXME: add lockout
 import os
@@ -38,6 +35,7 @@ app.config.update(dict(
     SECRET_KEY="development_key", #replace in production, used to encrypt sessions cookie to prevent user modification.
     APPNAME = "Monster Lockdown Security System",
     ORGNAME = "Cybersleuth Security",
+    MAX_ATTEMPTS = 3
     ))
 
 app.config.from_envvar('CYBERSLEUTH_SETTINGS', silent=True)
@@ -123,17 +121,24 @@ def login():
         session['user'] = request.form['username']
         this_user = get_user(session['user'])
         if this_user:
+            #check if locked
+            if (get_attempts(session['user']) > app.config['MAX_ATTEMPTS']):
+                revoke(session)
+                flash("Your account is locked.  Please contact your admin.")
+                return redirect(url_for("homepage"))
             #check_password
             valid_user = verify_password(this_user['user'], request.form['password'])
             if valid_user:
                 session['valid_password'] = True
-                print("should go to image_select?")
                 return redirect(url_for('image_select'))
-        else:
-            valid_user = False
-            revoke(session)
-            flash("Invalid Username or Password")
-            return redirect(url_for("login"))
+            else:
+                add_attempt(session['user'])
+
+        #If either password or username are wrong
+        valid_user = False
+        revoke(session)
+        flash("Invalid Username or Password")
+        return redirect(url_for("login"))
 
     #if this is a get request, return the login page
     return render_template('login.html')
@@ -148,6 +153,7 @@ def image_select():
                 return redirect(url_for('totp_entry'))
         else:
             flash("Invalid image choice, please try again")
+            add_attempt(session.get('user'))
             revoke(session)
             return redirect(url_for('login'))
     else:
@@ -172,6 +178,7 @@ def totp_entry():
                 session['valid_totp'] = True
                 return redirect(url_for("security_question_entry"))
         #Fall through if invalid code
+        add_attempt(session.get('user'))
         revoke(session)
         flash("Invalid code.  Please try again")
         return redirect(url_for('login'))
@@ -186,8 +193,10 @@ def security_question_entry():
             #FIXME add hashing for security answer
             if user['security_answer'] == request.form['security_answer']:
                 session['logged_in'] = True
+                reset_attempts(session['user'])
                 return redirect(url_for('homepage'))
             else:
+                add_attempt(session.get('user'))
                 revoke(session)
                 flash("Incorrect answer")
                 return redirect(url_for('login'))
@@ -218,12 +227,18 @@ def register():
     #default return and GET response
     return render_template('register.html')
 
+@app.route('/user_info')
+def user_info():
+    if session.get('logged_in'):
+        user = get_user(session['user'])
+        user_ = {'user': session['user'], 'email': user['email'], 'home_address': user['home_address'], 'social_security': user['social_security']}
+        return render_template('user_info.html', user=user_)
 
 @app.route('/logout')
 def logout():
     revoke(session)
     flash("You are now logged out")
-    redirect(url_for("homepage"))
+    return redirect(url_for("homepage"))
 
 
 #TODO 404 page

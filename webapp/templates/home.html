@@ -2,7 +2,7 @@
 {% block body %}
 <div class="greeting">
 {% if session.logged_in %}
-<h2>Hello {{ session.username }}</h2>
+<h2>Hello {{ session.user }}</h2>
 {% else %}
 <p>
     If you have an account, please <a href="{{ url_for('login') }}">log in</a>.  Otherwise, have you considered <a href="{{ url_for('register') }}">registering</a> for our product?
