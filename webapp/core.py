@@ -148,10 +148,10 @@ def login():
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
-    if request.method == ['POST']:
-        flash("Reset link sent for " + request.form['email'])
+    if request.method == 'POST':
+        flash("Reset link sent to " + request.form['email'])
         return redirect(url_for("homepage"))
-    return render_template("forgot_password")
+    return render_template("forgot_password.html")
 
 @app.route('/image_select', methods=['GET', 'POST'])
 def image_select():
