@@ -110,6 +110,8 @@ def get_attempts(username):
     return int(cur.fetchone()[0])
 
 """VIEWS"""
+
+
 @app.route('/')
 def homepage():
     return render_template('home.html')
@@ -143,6 +145,13 @@ def login():
 
     #if this is a get request, return the login page
     return render_template('login.html')
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == ['POST']:
+        flash("Reset link sent for " + request.form['email'])
+        return redirect(url_for("homepage"))
+    return render_template("forgot_password")
 
 @app.route('/image_select', methods=['GET', 'POST'])
 def image_select():
